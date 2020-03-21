@@ -1,0 +1,160 @@
+---
+title: "Short R Tutorial"
+author: "Vivian Ngo"
+date: '2020-03-21'
+output: 
+  pdf_document:
+    toc: true 
+    toc_depth: 2 
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Ways to view or summarize a dataframe 
+
+```{r}
+# I am just creating some sample data here
+n <- 1000
+time<- 1:n
+lat<- runif(n,-90,90) 
+long<- rbeta(n/2,0.5,0.5) 
+long<- c(long,rnorm(n/2,mean=4,sd=2) )
+df <- data.frame(time,long,lat)
+```
+
+```{r}
+# you can see some of the data 
+# remember to NOT print out a whole dataframe!
+head(df)
+```
+
+```{r}
+# you can also "glimpse" the data
+# remember you need hte dplyr package 
+library(dplyr)
+glimpse(df)
+summary(df)
+```
+
+# Showing observations by location, such as using longitude and latitude 
+
+```{r}
+# how to do a map using long and lat 
+# so let's say you have coordinates and you just want to plot points 
+# at the coordinates 
+# you can do this: 
+library(ggplot2)
+df %>% ggplot(aes(x=lat, y=long)) + geom_point()
+# you can also code it like this: 
+ggplot(data=df, aes(x=lat, y=long)) + geom_point()
+
+```
+
+## Different colors, shapes, and sizes for different types of observations 
+
+```{r}
+# let's say you want to further distinguish these locations by a type of crime 
+# or something 
+
+# e.g. let's add in some crime data where crime can be A,B,C, or D
+crime<- sample(c("A","B","C","D"), size=n/2, replace=TRUE)
+# for the second half, I want to make the crimes just A's and B's
+# so we can see some differences in the graph
+crime<-c(crime, sample(c("A","B"), size=n/2, replace=TRUE))
+df$crime<- crime
+# let's also add in some numerical data about, for example, how much the crime 
+# cost for an incident at that location
+cost<- runif(n, 0 ,9000) # this generates n random numbers between 0 and 9000
+df$cost <- cost
+
+head(df) # let's see what it looks like now
+
+# We can differ the points based on categorical variables such as crime type
+
+# color the plots by crime type 
+df %>% ggplot(aes(x=lat, y=long, color=crime)) + 
+  geom_point()
+
+# change the shape of the points by crime type 
+df %>% ggplot(aes(x=lat, y=long, shape=crime)) + 
+  geom_point()
+
+# What about numerical values, such as cost? 
+
+# we can change the color of the points based on the cost 
+df %>% ggplot(aes(x=lat, y=long, color=cost)) + 
+  geom_point()
+# we can also use different color schemes
+df %>% ggplot(aes(x=lat, y=long, color=cost)) + 
+  geom_point() +
+  scale_color_gradient(low="blue", high="red")
+
+# visit http://www.sthda.com/english/wiki/ggplot2-colors-how-to-change-colors-automatically-and-manually
+# for more information about color schemes 
+
+# we can change the transparency of the points using "alpha"
+df %>% ggplot(aes(x=lat, y=long, color=cost, alpha=0.5)) + 
+  geom_point() +
+  scale_color_gradient(low="blue", high="red")
+
+# we can change the size of the points
+df %>% ggplot(aes(x=lat, y=long, alpha=0.5, size=cost)) + 
+  geom_point() +
+  scale_color_gradient(low="blue", high="red")
+```
+
+## Changing the display size of your figures
+
+```{r fig.width=4, fig.height=3, fig.align="center"}
+# changing the size of your figures. 
+# to control the size of your figures, you can use fig.width and fig.height in the chunk header. 
+
+# for this chunk, I have put: 
+# ```{r fig.width=4, fig.height=3, fig.align="center"}
+# you can adjust fig.width and fig.height to your liking 
+df %>% ggplot(aes(x=lat, y=long, color=crime)) + 
+  geom_point()
+```
+
+## Don't forget to label and title your plots! 
+
+```{r}
+df %>% ggplot(aes(x=lat, y=long, color=crime)) + 
+  geom_point() + 
+  labs(title="Types of crimes by location") + # title the graph 
+  xlab("Latitude") +  # x axis label
+  ylab("Longitude") # y axis label 
+```
+
+
+## Showing multiple plots at once
+
+```{r}
+# this might be outside the scope of this course, but... 
+# you can use something called grid.arrange to show multiple plots at once. 
+# you just need to name your plots first.
+# e.g.: 
+library(gridExtra)
+p1<- df %>% ggplot(aes(x=lat, y=long, color=crime)) + 
+  geom_point()
+p2<- df %>% ggplot(aes(x=lat, y=long, shape=crime)) + 
+  geom_point()
+p3<-df %>% ggplot(aes(x=lat, y=long, color=cost)) + 
+  geom_point()
+p4<-df %>% ggplot(aes(x=lat, y=long, color=cost)) + 
+  geom_point() +
+  scale_color_gradient(low="blue", high="red")
+# nrow specifies the number of rows you want in this grid
+grid.arrange(p1,p2,p3,p4,nrow=2)
+```
+
+# Notes 
+
+- Not all plots work well for your data. In some cases, changing the color may be useful but not the size. Sometimes it will be the opposite. You should pick the graph that you use based on what is more visually helpful to the audience. 
+
+- Always title and label your graphs. 
+
+- When you have knitted your work, remember to look over the document to make sure that nothing is out of place. 
+
