@@ -1,0 +1,164 @@
+---
+title: "STA130 Winter 2020 R Tutorial 3 \n Sample Solutions"
+author: "Vivian Ngo"
+output:
+  html_document: default
+---
+  
+```{r, include=FALSE}
+knitr::opts_chunk$set(warning = FALSE, message = FALSE)
+```
+
+#In this tutorial, we will experiment with the oly12 dataset in VGAMdata
+  
+```{r}
+library(tidyverse) # load the tidyverse package
+library(VGAMdata) # load the VGAMdata package so that you can access the datasets inside of it 
+```
+
+```{r}
+glimpse(oly12) # brief summary of the oly12 dataframe
+
+# oly12 # calling the dataframe itself will display the dataframe, but not a summary
+
+# View(oly12) # the View function (with a capital "v") will open another tab in R and show you the dataframe like an Excel sheet
+# if you view this dataframe, you will see that each row corresponds to an athlete that participated in the 2012 Olympics
+```
+
+#To find Canadian athletes: 
+
+```{r}
+
+# Using filter to keep only canadian athletes, 
+# then glimpse to view the number of observations
+oly12 %>% filter(Country == "Canada") %>% 
+  glimpse()
+
+# Using filter to keep only canadian athletes, 
+# then count the number of rows in the resulting data frame
+oly12 %>% filter(Country == "Canada") %>% 
+  nrow()
+
+# Use summarise to calculate the number of athletes for each country, 
+# then filter to keep only the row for Canada
+oly12 %>% group_by(Country) %>% 
+  summarise(team_size = n()) %>%
+  filter(Country=="Canada")
+
+# Sum up the number of observations where Country is Canada
+sum(oly12$Country=="Canada") 
+
+# Filter to get Canadian countries and then sum up the rows
+oly12 %>% filter(Country =="Canada")%>%
+  summarize(n=n())
+```
+
+274 athletes represented Canada at the 2012 Olympic Games.
+
+#Create a new dataframe called `oly12_selectedSports` which contains only data for athletes who competed in Weightlifting and Badminton
+
+```{r}
+oly12 %>% filter(Sport == "Weightlifting" | Sport == "Badminton") %>% head()
+
+# !!! remember to CREATE a new dataframe! 
+oly12_selectedSports <- oly12 %>% filter(Sport == "Weightlifting" | Sport == "Badminton")
+```
+
+#Compare the age distribution for olympic athletes competing in weightlifting and badminton using both boxplots and histograms.
+
+```{r}
+oly12_selectedSports %>% ggplot(aes(x=Sport, y=Age)) +
+  geom_boxplot()
+
+oly12_selectedSports %>% ggplot(aes(x=Age)) +
+  geom_histogram(bins=12, color="black", fill="gray") + facet_wrap(~Sport)
+```
+
+#Answer the following questions: 
+
+## (i) Are the age distributions of badminton players and weightlifters symmetrical or skewed?
+From the histograms, we can see that the age distribution of badminton players is approximately symmetric but the age distribution of weightlifters is slightly skewed to the right.  This can also be seen in the boxplots of the age distributions - in particular, we see there are two outliers in the right tail of the age distribution of weightlifters, corresponding to two weightlifters who are much older than most of the weightlifters.
+
+## (ii) Is the median age higher for badminton players or weightlifters?
+
+```{r}
+# look back at the boxplots
+
+# or, calculate the medians 
+oly12_selectedSports %>% filter(Sport =="Badminton") %>% 
+  summarize(median=median(Age))
+
+oly12_selectedSports %>% filter(Sport =="Weightlifting") %>% 
+  summarize(median=median(Age))
+
+# group by!
+oly12_selectedSports %>% group_by(Sport) %>%
+  summarize(median_age=median(Age))
+```
+
+From the boxplots, we can see that the median age of badminton players is higher than the median age of weightlifters (~26 vs ~24).  
+
+## (iii) Based only on the histogram and boxplots, predict whether the standard deviation of the ages is similar or different.
+
+```{r}
+# look at the boxplot and histogram again
+oly12_selectedSports %>% ggplot(aes(x=Sport, y=Age)) +
+  geom_boxplot()
+
+oly12_selectedSports %>% ggplot(aes(x=Age)) +
+  geom_histogram(bins=12, color="black", fill="gray") + facet_wrap(~Sport)
+```
+
+I predict that the standard deviatiation of ages for badminton players will be a little bit larger than that of weightlifters since the IQR and whiskers are both a bit longer.  However, the range of the age distributions (max - min) are similar for both sports.
+
+## Create a summary table reporting the minimum, maximum, mean, median, and standard deviation of ages for badminton players and weightlifters.  Compare these values to the prediction you made in (e-iii)
+
+```{r}
+oly12_selectedSports %>% group_by(Sport) %>%
+  summarise(min=min(Age), max=max(Age), mean=mean(Age), median=median(Age), sd=sd(Age))
+```
+
+As predicted in (e-iii) the standard deviation of ages is slightly higher for badminton players than for weightlifters (4.12 vs 4.06), but they are very similar.  
+
+## Use the `arrange` function to find the name and age of the 6 oldest athletes who competed in the 2012 Olympics.
+
+```{r}
+oly12  %>%
+  arrange(desc(Age)) %>%
+  head(6) %>% # default for head is 6 as well 
+  select(Name, Age, Sport, Event)
+
+oly12  %>%
+  arrange(-Age) %>%
+  head(6) %>% 
+  select(Name, Age, Sport, Event)
+```
+
+## Modify your code from (f) to find the name, Age, and event for the 6 oldest competitors who won gold medals at the 2012 olympics
+
+```{r}
+oly12  %>%
+  filter(Gold > 0) %>%
+  arrange(desc(Age)) %>%
+  head(6) %>%
+  select(Name, Age, Sport, Event)
+```
+
+```{r eval=FALSE}
+# why is the code below not okay?
+oly12  %>%
+  arrange(desc(Age)) %>%
+  head(6) %>%
+  select(Name, Age, Sport, Event) %>% 
+  filter(Gold > 0)
+```
+
+## Create a new variable called `total_medals` and find the name of the athlete who won the most medals at the 2012 Olympics.
+```{r}
+oly12 %>% 
+  mutate(total_medals = Gold + Silver + Bronze) %>%
+  arrange(desc(total_medals)) %>%
+  head() %>% 
+  select(Name, Country, Sport, total_medals)
+```
+
