@@ -1,4 +1,4 @@
-# STA130-TA-All-Terms
+# STA130-Teaching-Assistant
 
 This repository contains the learning materials that I used as a Teaching Assistant for STA130H1: An Introduction to Statistical Reasoning and Data Science at the University of Toronto. Materials used were provided by the U of T Statistical Sciences Department and the presentations were prepared by me.
 
